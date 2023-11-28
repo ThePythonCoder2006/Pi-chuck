@@ -1,0 +1,65 @@
+\documentclass[fleqn]{report}
+
+\input{C:/Users/Paul Taveneaux/Desktop/document/progra/latex/files/preamble_dark}
+\input{C:/Users/Paul Taveneaux/Desktop/document/progra/latex/files/macros}
+\input{C:/Users/Paul Taveneaux/Desktop/document/progra/latex/files/letterfonts}
+
+\title{formulas used by Pi-chuck}
+\author{Paul TAVENEAUX}
+\date{\today}
+
+\pagecolor{black}
+\color{white}
+
+\begin{document}
+\maketitle
+\newpage
+
+\section{Original formula}
+\[
+  \frac{1}{\pi} = \frac{1}{426880\sqrt{10005}}\sum_{ k = 0 }^{\infty}\frac{(-1)^k(6k)!(13591409 + 545140134k)}{(3k)!(k!)^3640320^{3k}}
+\]
+
+\section{$\pi$ in terms of $a$ and $b$}
+
+\begin{align*}
+  \frac{1}{\pi} &= \frac{1}{426880\sqrt{10005}}\left[13591409\sum_{k = 0}^{\infty}\frac{(-1)^k(6k)!}{(3k)!(k!)^3640320^{3k}} + 545140134\sum_{k = 0}^{\infty}\frac{(-1)^k(6k)!k}{(3k)!(k!)^3640320^{3k}}\right]\\
+  \pi &= \frac{426880\sqrt{10005}}{1359140a + 545140134b}\\
+\end{align*}
+with
+\begin{align*}
+  a &= \sum_{k = 0}^{\infty}\frac{(-1)^k(6k)!}{(3k)!(k!)^3640320^{3k}}\\
+  \text{and} \quad b &= \sum_{k = 0}^{\infty}\frac{(-1)^k(6k)!k}{(3k)!(k!)^3640320^{3k}}
+\end{align*}
+
+\section{$\pi$ in terms of $a_k$ and $b_k$}
+let $(a_n)_{n \in \N}$ be a series such that:
+\[
+  \forall n \in \N, a_n = \frac{(-1)^k(6k)!k}{(3k)!(k!)^3640320^{3k}}
+.\]
+it then follows that :
+\[
+a = \sum_{k=0}^{\infty} a_k
+.\] 
+
+\noindent
+let $(b_n)_{n \in \N}$ be a series defined by:
+\[
+\forall n  \in \N,\ b_n = n * a_n
+.\] 
+It then follows that:
+\[
+  b = \sum_{k=0}^{\infty} b_k
+.\] 
+
+\section{recursive definition of the $a_n$s and $b_n$s}
+
+\begin{align*}
+  \left\{
+    \begin{aligned}
+    a_0 &= 
+    \end{aligned}
+  \right.
+\end{align*}
+
+\end{document}
