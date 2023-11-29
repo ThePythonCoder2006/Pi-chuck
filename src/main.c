@@ -5,7 +5,7 @@
 
 #include "DAI.h"
 
-#define PREC (2)
+#define PREC (5)
 
 int main(int argc, char **argv)
 {
@@ -26,18 +26,18 @@ int main(int argc, char **argv)
   DAI_t A, B, S;
   DAI_init(&A, PREC);
   DAI_init(&B, PREC);
-  DAI_init(&S, 2 * PREC);
+  DAI_init(&S, PREC);
 
-  DAI_CHECK_RET_VALUE(DAI_set_ui(A, (DAI_DEC_UNIT_MAX)))
-  DAI_CHECK_RET_VALUE(DAI_set_ui(B, (1)));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(A, DAI_DEC_UNIT_MAX * DAI_DEC_UNIT_MAX - 1))
+  DAI_CHECK_RET_VALUE(DAI_set_ui(B, 10 * DAI_DEC_UNIT_MAX - 1));
 
   printf("  ");
   DAI_print(A);
-  printf("\n+ ");
+  printf("\nx ");
   DAI_print(B);
   printf("\n______________________________\n");
 
-  DAI_CHECK_RET_VALUE(DAI_add(S, A, B), "could not add A and B : ");
+  DAI_CHECK_RET_VALUE(DAI_mult(S, A, B), "could not multiply A and B : ");
 
   printf("\n= ");
   DAI_print(S);
@@ -49,4 +49,3 @@ int main(int argc, char **argv)
 
   return 0;
 }
-

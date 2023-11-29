@@ -62,10 +62,10 @@ DAI_ret_t DAI_clean(DAI_ptr rop);
 DAI_ret_t DAI_set_ui(DAI_t rop, uint64_t op);
 
 DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2);
+DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2);
 
 DAI_ret_t DAI_print(DAI_t op);
 
 DAI_errormsg *DAI_strerror(DAI_ret_t op);
 
 #endif // __DAI_H__
-

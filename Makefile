@@ -35,7 +35,7 @@ run: $(OUT)
 	./$^
 
 db: $(OUT_DB) Makefile $(IFILES)
-	gdb ./$?
+	gdb ./$<
 
 $(OUT): $(OBJ)
 	$(CC) $^ -o $@ $(CFLAGS)
