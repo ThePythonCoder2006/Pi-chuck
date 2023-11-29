@@ -10,7 +10,8 @@
 DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1] = {
     "nothing went wrong !",
     "the precision of the int given was not enough to perform the calculations that were asked !",
-    "some memory could not be allocated !"
+    "some memory could not be allocated !",
+    "this function is not yet implemented !",
     "the error code given does not exist !",
 };
 
@@ -70,6 +71,21 @@ DAI_ret_t DAI_set_ui(DAI_t rop, uint64_t op)
   rop->data[0] = op % DAI_DEC_UNIT_MAX;
   rop->data[1] = (uint64_t)(op / DAI_DEC_UNIT_MAX) % DAI_DEC_UNIT_MAX;
   rop->data[2] = (uint64_t)((op / DAI_DEC_UNIT_MAX) / DAI_DEC_UNIT_MAX);
+
+  return DAI_RET_OK;
+}
+
+DAI_ret_t DAI_set(DAI_t rop, DAI_t op)
+{
+  if (rop->prec != op->prec)
+  {
+    fprintf(stderr, DAI_TODO "copying ints with different precision is not (yet) implemented !!\n");
+    return DAI_RET_TODO;
+  }
+
+  rop->flags = op->flags;
+  rop->prec = op->prec;
+  memcpy(rop->data, op->data, rop->prec * sizeof(rop->data[0]));
 
   return DAI_RET_OK;
 }
@@ -240,6 +256,30 @@ static DAI_ret_t DAI_mult_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t
   return DAI_RET_OK;
 }
 
+DAI_ret_t DAI_mult_smol_int(DAI_t rop, DAI_t op1, DAI_dec_unit_t op2)
+{
+  DAI_set_zero(rop);
+  DAI_t acc = rop;
+  DAI_t acc2;
+  DAI_init(&acc2, acc->prec);
+
+  DAI_t digit_res;
+  DAI_init(&digit_res, 2);
+
+  for (DAI_prec_t i = 0; i < op1->prec; ++i)
+  {
+    DAI_mult_dec_unit(digit_res, op1->data[i], op2);
+    DAI_add(acc2, acc, digit_res);
+
+    // pointer swap
+    DAI_t tmp = acc;
+    acc = acc2;
+    acc2 = tmp;
+  }
+
+  return DAI_RET_OK;
+}
+
 DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2)
 {
   DAI_prec_t min_prec = op1->prec > op2->prec ? op1->prec : op2->prec;
@@ -265,7 +305,7 @@ DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2)
   {
     for (DAI_prec_t j = 0; j < op1->prec; ++j)
     {
-      DAI_mult_dec_unit(digit_res, op2->data[i], op1->data[j]);
+      DAI_CHECK_RET_VALUE(DAI_mult_dec_unit(digit_res, op2->data[i], op1->data[j]));
 
       DAI_CHECK_RET_VALUE(DAI_add_shift(acc2, acc, 0, digit_res, i + j));
       // pointer swap

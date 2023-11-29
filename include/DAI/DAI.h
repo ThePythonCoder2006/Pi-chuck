@@ -29,6 +29,7 @@ typedef enum DAI_ret_e
   DAI_RET_OK,
   DAI_RET_PREC_ERROR,
   DAI_RET_MEM_ERROR,
+  DAI_RET_TODO,
   DAI_RET_TOT,
 } DAI_ret_t;
 
@@ -60,9 +61,11 @@ DAI_ret_t DAI_init(DAI_ptr rop, uint64_t prec);
 DAI_ret_t DAI_clean(DAI_ptr rop);
 
 DAI_ret_t DAI_set_ui(DAI_t rop, uint64_t op);
+DAI_ret_t DAI_set(DAI_t rop, DAI_t op);
 
 DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2);
+DAI_ret_t DAI_mult_smol_int(DAI_t rop, DAI_t op1, DAI_dec_unit_t op2);
 
 DAI_ret_t DAI_print(DAI_t op);
 
