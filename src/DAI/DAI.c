@@ -42,6 +42,19 @@ DAI_ret_t DAI_clean(DAI_ptr rop)
   return DAI_RET_OK;
 }
 
+DAI_ret_t DAI_correct_flags(DAI_t rop)
+{
+  for (DAI_prec_t i = 0; i < rop->prec; ++i)
+    if (rop->data[i] != 0)
+    {
+      rop->flags &= ~DAI_FLAGS_ZERO;
+      return DAI_RET_OK;
+    }
+
+  rop->flags |= DAI_FLAGS_ZERO;
+  return DAI_RET_OK;
+}
+
 DAI_ret_t DAI_set_zero(DAI_t rop)
 {
   rop->flags = DAI_FLAGS_ZERO;
@@ -90,11 +103,15 @@ DAI_ret_t DAI_set(DAI_t rop, DAI_t op)
   return DAI_RET_OK;
 }
 
-DAI_ret_t DAI_handle_carrys(DAI_t rop, uint8_t *carrys, size_t carrys_size)
+typedef int8_t DAI_add_carry_t;
+
+DAI_ret_t DAI_handle_carrys(DAI_t rop, DAI_add_carry_t *carrys, size_t carrys_size)
 {
+  DAI_add_carry_t *original_carrys = carrys;
+
   assert(carrys_size > 0);
 
-  uint8_t *carrys2 = calloc(carrys_size, sizeof(uint8_t));
+  DAI_add_carry_t *carrys2 = calloc(carrys_size, sizeof(carrys[0]));
   if (carrys2 == NULL)
     return DAI_RET_MEM_ERROR;
 
@@ -104,6 +121,19 @@ DAI_ret_t DAI_handle_carrys(DAI_t rop, uint8_t *carrys, size_t carrys_size)
     quit = 1;
     for (DAI_prec_t i = 1; i < carrys_size - 1; ++i)
     {
+      if (carrys[i] < 0 && (signed int)rop->data[i] < carrys[i]) // negative carry from substraction needs to borrow from next one
+      {
+        rop->data[i] += DAI_DEC_UNIT_MAX + carrys[i];
+        carrys2[i + 1] -= 1;
+        if (i == carrys_size - 2) // number should be negative
+        {
+          printf("negative\n");
+          return DAI_RET_OK;
+        }
+        quit = 0;
+        continue;
+      }
+
       rop->data[i] += carrys[i];
       if (rop->data[i] >= DAI_DEC_UNIT_MAX)
       {
@@ -113,10 +143,15 @@ DAI_ret_t DAI_handle_carrys(DAI_t rop, uint8_t *carrys, size_t carrys_size)
       }
     }
 
-    memcpy(carrys, carrys2, carrys_size * sizeof(uint8_t));
+    DAI_add_carry_t *tmp = carrys;
+    carrys = carrys2;
+    carrys2 = tmp;
+    // memcpy(carrys, carrys2, carrys_size * sizeof(carrys[0]));
   }
-
-  free(carrys2);
+  if (carrys2 == original_carrys)
+    free(carrys);
+  else
+    free(carrys2);
 
   return DAI_RET_OK;
 }
@@ -138,7 +173,7 @@ DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2)
   if (rop->prec < max_prec)
     return DAI_RET_PREC_ERROR;
 
-  uint8_t *carrys = calloc(max_prec + 1, sizeof(uint8_t));
+  DAI_add_carry_t *carrys = calloc(max_prec + 1, sizeof(DAI_add_carry_t));
   if (carrys == NULL)
     return DAI_RET_MEM_ERROR;
 
@@ -182,13 +217,12 @@ static DAI_ret_t DAI_add_shift(DAI_t rop, DAI_t op1, DAI_prec_t op1_shift, DAI_t
 
   DAI_prec_t max_prec = op1->prec > op2->prec ? op1->prec : op2->prec;
   DAI_prec_t max_shift = op1_shift > op2_shift ? op1_shift : op2_shift;
-  DAI_prec_t max_tot_prec = max_prec + max_shift;
   DAI_t lower_op = op1_shift < op2_shift ? op1 : op2;
 
   if (rop->prec < max_prec)
     return DAI_RET_PREC_ERROR;
 
-  uint8_t *carrys = calloc(max_prec + 1, sizeof(uint8_t));
+  int8_t *carrys = calloc(max_prec + 1, sizeof(int8_t));
   if (carrys == NULL)
     return DAI_RET_MEM_ERROR;
 
@@ -217,6 +251,59 @@ static DAI_ret_t DAI_add_shift(DAI_t rop, DAI_t op1, DAI_prec_t op1_shift, DAI_t
   }
 
   DAI_CHECK_RET_VALUE(DAI_handle_carrys(rop, carrys, max_prec + 1));
+
+  free(carrys);
+
+  return DAI_RET_OK;
+}
+
+/*
+ * computes rop = op1 - op2
+ */
+DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
+{
+  assert(rop != op1 && rop != op2);
+
+  if (DAI_IS_ZERO(op1) && DAI_IS_ZERO(op2))
+  {
+    rop->flags |= DAI_FLAGS_ZERO;
+    return DAI_RET_OK;
+  }
+  else
+    rop->flags &= ~DAI_FLAGS_ZERO;
+
+  DAI_prec_t max_prec = op1->prec > op2->prec ? op1->prec : op2->prec;
+
+  if (rop->prec < max_prec)
+    return DAI_RET_PREC_ERROR;
+
+  uint8_t carrys_was_set = 0;
+  DAI_add_carry_t *carrys = calloc(max_prec + 1, sizeof(DAI_add_carry_t));
+  if (carrys == NULL)
+    return DAI_RET_MEM_ERROR;
+
+  for (DAI_prec_t i = 0; i < max_prec; ++i)
+  {
+    if (op2->data[i] > op1->data[i]) // division would go negative
+    {
+      rop->data[i] = (DAI_DEC_UNIT_MAX + op1->data[i]) - op2->data[i];
+      carrys[i + 1] = -1;
+      carrys_was_set = 1;
+      continue;
+    }
+
+    rop->data[i] = op1->data[i] - op2->data[i];
+  }
+
+  if (carrys[max_prec] < 0)
+  {
+    if (rop->prec < max_prec + 1)
+      return DAI_RET_PREC_ERROR;
+  }
+
+  DAI_CHECK_RET_VALUE(DAI_handle_carrys(rop, carrys, max_prec + 1));
+
+  DAI_CHECK_RET_VALUE(DAI_correct_flags(rop), "Unreachable !!! :");
 
   free(carrys);
 
@@ -327,7 +414,7 @@ DAI_ret_t DAI_print(DAI_t op)
   }
 
   DAI_prec_t start = 0;
-  while (op->data[op->prec - (start++) - 1] == 0)
+  while (op->data[op->prec - (start++) - 1] == 0 && start < op->prec)
     ;
   printf("%u ", op->data[op->prec - start]);
   for (DAI_prec_t i = start; i < op->prec; ++i)

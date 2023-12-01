@@ -5,7 +5,7 @@
 
 #include "DAI.h"
 
-#define PREC (5)
+#define PREC (20)
 
 int main(int argc, char **argv)
 {
@@ -28,16 +28,16 @@ int main(int argc, char **argv)
   DAI_init(&B, PREC);
   DAI_init(&S, PREC);
 
-  DAI_CHECK_RET_VALUE(DAI_set_ui(A, DAI_DEC_UNIT_MAX * DAI_DEC_UNIT_MAX - 1))
-  DAI_CHECK_RET_VALUE(DAI_set_ui(B, 10 * DAI_DEC_UNIT_MAX - 1));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(A, 1))
+  DAI_CHECK_RET_VALUE(DAI_set_ui(B, DAI_DEC_UNIT_MAX));
 
   printf("  ");
   DAI_print(A);
-  printf("\nx ");
+  printf("\n- ");
   DAI_print(B);
   printf("\n______________________________\n");
 
-  DAI_CHECK_RET_VALUE(DAI_mult(S, A, B), "could not multiply A and B : ");
+  DAI_CHECK_RET_VALUE(DAI_sub(S, A, B), "could not multiply A and B : ");
 
   printf("\n= ");
   DAI_print(S);
@@ -64,19 +64,15 @@ DAI_ret_t sqrt_coupled_newtons_iteration(DAI_t rop, DAI_t op, DAI_t half)
   DAI_t tmp;
   DAI_init(&tmp, rop->prec);
 
-  DAI_t op_half;
-  DAI_init(&op_half, op->prec + half->prec);
-  DAI_mult(op_half, op, half);
-
   DAI_t x_n = rop;
-  DAI_set(x_n, op_half); // initial guess
+  DAI_mult(x_n, op, half); // initial guess
   DAI_t y_n;
   DAI_init(&y_n, rop->prec);
   DAI_set_ui(y_n, 1);
 
   DAI_t op_one;
-  DAI_init(&op_one, op_half->prec);
-  DAI_mult_smol_int(op_one, op_half, 1);
+  DAI_init(&op_one, half->prec + 2);
+  DAI_mult_smol_int(op_one, x_n, 4);
 
   DAI_t two;
   DAI_init(&two, half->prec + 1);
@@ -97,7 +93,7 @@ DAI_ret_t sqrt_coupled_newtons_iteration(DAI_t rop, DAI_t op, DAI_t half)
       break;
   }
 
-  DAI_clean(op_one);
+  DAI_clean(&op_one);
 
   return DAI_RET_OK;
 }

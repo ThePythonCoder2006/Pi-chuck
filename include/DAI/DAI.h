@@ -54,16 +54,19 @@ extern DAI_ret_t DAI_CHECK_ret;
 
 #define DAI_FLAGS_NONE (0x0)
 #define DAI_FLAGS_ZERO (0x1)
+#define DAI_FLAGS_NEGA (0x2)
 
 #define DAI_IS_ZERO(op) ((op->flags | DAI_FLAGS_ZERO) == op->flags)
 
 DAI_ret_t DAI_init(DAI_ptr rop, uint64_t prec);
 DAI_ret_t DAI_clean(DAI_ptr rop);
+DAI_ret_t DAI_correct_flags(DAI_t rop);
 
 DAI_ret_t DAI_set_ui(DAI_t rop, uint64_t op);
 DAI_ret_t DAI_set(DAI_t rop, DAI_t op);
 
 DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2);
+DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_mult_smol_int(DAI_t rop, DAI_t op1, DAI_dec_unit_t op2);
 
