@@ -53,3 +53,4 @@ dkms.conf
 
 *.aux
 latex/*.log
+.vscode/c_cpp_properties.json
