@@ -24,12 +24,12 @@ int main(int argc, char **argv)
   // printf("computing pi with a precision of %" PRIu64 " digits\n", digit_count);
 
   DAI_t A, B, S;
-  DAI_init(&A, PREC);
-  DAI_init(&B, PREC);
-  DAI_init(&S, PREC);
+  DAI_INIT(&A, PREC);
+  DAI_INIT(&B, PREC);
+  DAI_INIT(&S, PREC);
 
-  DAI_CHECK_RET_VALUE(DAI_set_ui(A, 1))
-  DAI_CHECK_RET_VALUE(DAI_set_ui(B, DAI_DEC_UNIT_MAX));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(A, BILLION));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(B, BILLION));
 
   printf("  ");
   DAI_print(A);
@@ -48,52 +48,4 @@ int main(int argc, char **argv)
   DAI_clean(&S);
 
   return 0;
-}
-
-/*
- * compute rop = sqrt(op * one)
- */
-DAI_ret_t sqrt_coupled_newtons_iteration(DAI_t rop, DAI_t op, DAI_t half)
-{
-  if (op->prec > DAI_PREC_MAX - half->prec) // op->prec + one->prec > DAI_PREC_MAX
-    return DAI_RET_PREC_ERROR;
-
-  if (rop->prec < (op->prec + half->prec) / 2)
-    return DAI_RET_PREC_ERROR;
-
-  DAI_t tmp;
-  DAI_init(&tmp, rop->prec);
-
-  DAI_t x_n = rop;
-  DAI_mult(x_n, op, half); // initial guess
-  DAI_t y_n;
-  DAI_init(&y_n, rop->prec);
-  DAI_set_ui(y_n, 1);
-
-  DAI_t op_one;
-  DAI_init(&op_one, half->prec + 2);
-  DAI_mult_smol_int(op_one, x_n, 4);
-
-  DAI_t two;
-  DAI_init(&two, half->prec + 1);
-  DAI_mult_smol_int(two, half, 4);
-
-  DAI_dec_unit_t x_n_old = x_n->data[0];
-
-  while (1)
-  {
-    x_n_old = x_n->data[0];
-
-    // y_n = y_n * ( 2 - 2* x_n * y_n)
-    DAI_mult(tmp, x_n, y_n); // tmp = x_n * x_n
-    DAI_mult(y_n, tmp, two); // y_n = 2 * x_n * y_n
-    DAI_sub(tmp, two, y_n);  // tmp = 2 - 2 * x_n * y_n
-
-    if (x_n_old == x_n->data[0])
-      break;
-  }
-
-  DAI_clean(&op_one);
-
-  return DAI_RET_OK;
 }

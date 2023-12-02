@@ -7,6 +7,8 @@
 
 #include "DAI.h"
 
+#ifndef __DAI_USE_GMP__
+
 DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1] = {
     "nothing went wrong !",
     "the precision of the int given was not enough to perform the calculations that were asked !",
@@ -17,8 +19,7 @@ DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1] = {
 
 DAI_ret_t DAI_CHECK_ret = DAI_RET_OK;
 
-DAI_ret_t
-DAI_init(DAI_ptr rop, DAI_prec_t prec)
+DAI_ret_t DAI_init(DAI_ptr rop, DAI_prec_t prec)
 {
   *rop = malloc(sizeof(**rop));
   (*rop)->prec = prec;
@@ -277,7 +278,7 @@ DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
   if (rop->prec < max_prec)
     return DAI_RET_PREC_ERROR;
 
-  uint8_t carrys_was_set = 0;
+  // uint8_t carrys_was_set = 0;
   DAI_add_carry_t *carrys = calloc(max_prec + 1, sizeof(DAI_add_carry_t));
   if (carrys == NULL)
     return DAI_RET_MEM_ERROR;
@@ -288,7 +289,7 @@ DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
     {
       rop->data[i] = (DAI_DEC_UNIT_MAX + op1->data[i]) - op2->data[i];
       carrys[i + 1] = -1;
-      carrys_was_set = 1;
+      // carrys_was_set = 1;
       continue;
     }
 
@@ -318,7 +319,7 @@ static DAI_ret_t DAI_mult_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t
 {
   if (rop->prec < 2)
   {
-    fprintf(stderr, DAI_ERROR "the precision of the given ret value was not enough: %llu < %llu."
+    fprintf(stderr, DAI_ERROR "the precision of the given ret value was not enough: %" PRIu64 " < %llu."
                               " If you're not an experienced developper you should not use DAI_mult_dec_unit by yourself."
                               " If you did not call this function yourself, please report this bug to the github repo. (%s)\n",
             rop->prec, 2ULL, "https://www.github.com/ThePythonCoder2006/Pi-chuck");
@@ -343,7 +344,7 @@ static DAI_ret_t DAI_mult_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t
   return DAI_RET_OK;
 }
 
-DAI_ret_t DAI_mult_smol_int(DAI_t rop, DAI_t op1, DAI_dec_unit_t op2)
+DAI_ret_t DAI_mult_smol_int(DAI_t rop, DAI_t op1, uint32_t op2)
 {
   DAI_set_zero(rop);
   DAI_t acc = rop;
@@ -376,7 +377,7 @@ DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2)
 
   if (op1->prec > DAI_PREC_MAX - op2->prec)
   {
-    fprintf(stderr, DAI_ERROR "the precision of the ints provided adds up to more than %llu(DAI_PREC_MAX), which is the maxium supported\n", DAI_PREC_MAX);
+    fprintf(stderr, DAI_ERROR "the precision of the ints provided adds up to more than %" PRIu64 "(DAI_PREC_MAX), which is the maxium supported\n", DAI_PREC_MAX);
     return DAI_RET_PREC_ERROR;
   }
   // DAI_prec_t max_prec = op1->prec + op2->prec;
@@ -429,3 +430,5 @@ DAI_errormsg *DAI_strerror(DAI_ret_t op)
     return &DAI_errormsgs[DAI_RET_TOT];
   return &DAI_errormsgs[op];
 }
+
+#endif // __DAI_USE_GMP__
