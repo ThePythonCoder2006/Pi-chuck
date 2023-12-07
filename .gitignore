@@ -52,5 +52,5 @@ Mkfile.old
 dkms.conf
 
 *.aux
-latex/*.log
+*.log
 .vscode/c_cpp_properties.json

@@ -49,3 +49,12 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
+/*
+ * computes (426880 * sqrt(10005)) * one using the so called Newton's coupled iteration
+ */
+int compute_const(DAI_t rop, DAI_t one)
+{
+
+  return 0;
+}

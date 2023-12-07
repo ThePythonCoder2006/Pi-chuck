@@ -7,6 +7,8 @@
 #define __DAI_CUSTOM__
 
 typedef uint32_t DAI_dec_unit_t;
+#define DAI_DEC_UNIT_MAX BILLION
+
 typedef uint64_t DAI_prec_t;
 #define DAI_PREC_MAX (UINT64_MAX)
 
@@ -46,8 +48,6 @@ extern DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1];
   }
 
 extern DAI_ret_t DAI_CHECK_ret;
-
-#define DAI_DEC_UNIT_MAX BILLION
 
 // flags
 
