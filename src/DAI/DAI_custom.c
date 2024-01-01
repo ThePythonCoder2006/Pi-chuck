@@ -58,9 +58,10 @@ DAI_ret_t DAI_correct_flags(DAI_t rop)
 
 DAI_ret_t DAI_set_zero(DAI_t rop)
 {
-  rop->flags = DAI_FLAGS_ZERO;
   for (DAI_prec_t i = 0; i < rop->prec; ++i)
     rop->data[i] = 0;
+
+  rop->flags = DAI_FLAGS_ZERO;
 
   return DAI_RET_OK;
 }
@@ -161,7 +162,7 @@ DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2)
 {
   assert(rop != op1 && rop != op2);
 
-  if (DAI_IS_ZERO(op1) && DAI_IS_ZERO(op2))
+  if (DAI_IS_ZERO(*op1) && DAI_IS_ZERO(*op2))
   {
     rop->flags |= DAI_FLAGS_ZERO;
     return DAI_RET_OK;
@@ -169,16 +170,16 @@ DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2)
   else
     rop->flags &= ~DAI_FLAGS_ZERO;
 
-  DAI_prec_t max_prec = op1->prec > op2->prec ? op1->prec : op2->prec;
+  DAI_prec_t min_prec = op1->prec < op2->prec ? op1->prec : op2->prec;
 
-  if (rop->prec < max_prec)
+  if (rop->prec < min_prec)
     return DAI_RET_PREC_ERROR;
 
-  DAI_add_carry_t *carrys = calloc(max_prec + 1, sizeof(DAI_add_carry_t));
+  DAI_add_carry_t *carrys = calloc(min_prec + 1, sizeof(DAI_add_carry_t));
   if (carrys == NULL)
     return DAI_RET_MEM_ERROR;
 
-  for (DAI_prec_t i = 0; i < max_prec; ++i)
+  for (DAI_prec_t i = 0; i < min_prec; ++i)
   {
     rop->data[i] = op1->data[i] + op2->data[i];
     if (rop->data[i] >= DAI_DEC_UNIT_MAX)
@@ -188,13 +189,13 @@ DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2)
     }
   }
 
-  if (carrys[max_prec] != 0)
+  if (carrys[min_prec] != 0)
   {
-    if (rop->prec < max_prec + 1)
+    if (rop->prec < min_prec + 1)
       return DAI_RET_PREC_ERROR;
   }
 
-  DAI_CHECK_RET_VALUE(DAI_handle_carrys(rop, carrys, max_prec + 1));
+  DAI_CHECK_RET_VALUE(DAI_handle_carrys(rop, carrys, min_prec + 1));
 
   free(carrys);
 
@@ -208,7 +209,7 @@ static DAI_ret_t DAI_add_shift(DAI_t rop, DAI_t op1, DAI_prec_t op1_shift, DAI_t
 {
   assert(rop != op1 && rop != op2);
 
-  if (DAI_IS_ZERO(op1) && DAI_IS_ZERO(op2))
+  if (DAI_IS_ZERO(*op1) && DAI_IS_ZERO(*op2))
   {
     rop->flags |= DAI_FLAGS_ZERO;
     return DAI_RET_OK;
@@ -216,20 +217,22 @@ static DAI_ret_t DAI_add_shift(DAI_t rop, DAI_t op1, DAI_prec_t op1_shift, DAI_t
   else
     rop->flags &= ~DAI_FLAGS_ZERO;
 
-  DAI_prec_t max_prec = op1->prec > op2->prec ? op1->prec : op2->prec;
+  DAI_prec_t min_prec = op1->prec > op2->prec ? op1->prec : op2->prec;
   DAI_prec_t max_shift = op1_shift > op2_shift ? op1_shift : op2_shift;
   DAI_t lower_op = op1_shift < op2_shift ? op1 : op2;
 
-  if (rop->prec < max_prec)
+  printf("%llu < %llu\n", rop->prec, min_prec);
+
+  if (rop->prec < min_prec)
     return DAI_RET_PREC_ERROR;
 
-  int8_t *carrys = calloc(max_prec + 1, sizeof(int8_t));
+  DAI_add_carry_t *carrys = calloc(min_prec + 1, sizeof(DAI_add_carry_t));
   if (carrys == NULL)
     return DAI_RET_MEM_ERROR;
 
   DAI_prec_t min_shift = op1_shift < op2_shift ? op1_shift : op2_shift;
 
-  for (DAI_prec_t i = min_shift; i < max_prec; ++i)
+  for (DAI_prec_t i = min_shift; i < min_prec; ++i)
   {
     if (i < max_shift)
     {
@@ -245,13 +248,13 @@ static DAI_ret_t DAI_add_shift(DAI_t rop, DAI_t op1, DAI_prec_t op1_shift, DAI_t
     }
   }
 
-  if (carrys[max_prec] != 0)
+  if (carrys[min_prec] != 0)
   {
-    if (rop->prec < max_prec + 1)
+    if (rop->prec < min_prec + 1)
       return DAI_RET_PREC_ERROR;
   }
 
-  DAI_CHECK_RET_VALUE(DAI_handle_carrys(rop, carrys, max_prec + 1));
+  DAI_CHECK_RET_VALUE(DAI_handle_carrys(rop, carrys, min_prec + 1));
 
   free(carrys);
 
@@ -265,7 +268,7 @@ DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
 {
   assert(rop != op1 && rop != op2);
 
-  if (DAI_IS_ZERO(op1) && DAI_IS_ZERO(op2))
+  if (DAI_IS_ZERO(*op1) && DAI_IS_ZERO(*op2))
   {
     rop->flags |= DAI_FLAGS_ZERO;
     return DAI_RET_OK;
@@ -315,12 +318,12 @@ DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
  * computes rop = op1 * op2
  * rop->prec MUST be at least 2, as the result of op1 * op2 could be up to 1 + 1 dec unit long
  */
-static DAI_ret_t DAI_mult_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t op2)
+static DAI_ret_t DAI_mul_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t op2)
 {
   if (rop->prec < 2)
   {
-    fprintf(stderr, DAI_ERROR "the precision of the given ret value was not enough: %" PRIu64 " < %llu."
-                              " If you're not an experienced developper you should not use DAI_mult_dec_unit by yourself."
+    fprintf(stderr, DAI_ERROR "the precision of the given ret value was not enough: %" PRIPREC " < %llu."
+                              " If you're not an experienced developper you should not use DAI_mul_dec_unit by yourself."
                               " If you did not call this function yourself, please report this bug to the github repo. (%s)\n",
             rop->prec, 2ULL, "https://www.github.com/ThePythonCoder2006/Pi-chuck");
     return DAI_RET_PREC_ERROR;
@@ -331,11 +334,11 @@ static DAI_ret_t DAI_mult_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t
   uint64_t res = (uint64_t)op1 * (uint64_t)op2;
   if (res == 0)
   {
-    rop->flags |= DAI_FLAGS_ZERO;
+    DAI_SET_FLAG(*rop, DAI_FLAGS_ZERO);
     return DAI_RET_OK;
   }
   else
-    rop->flags &= ~DAI_FLAGS_ZERO;
+    DAI_CLEAR_FLAG(*rop, DAI_FLAGS_ZERO);
 
   // printf("res = %llu\n", res);
   rop->data[0] = res % DAI_DEC_UNIT_MAX;
@@ -344,7 +347,7 @@ static DAI_ret_t DAI_mult_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t
   return DAI_RET_OK;
 }
 
-DAI_ret_t DAI_mult_smol_int(DAI_t rop, DAI_t op1, uint32_t op2)
+DAI_ret_t DAI_mul_smol_int(DAI_t rop, DAI_t op1, uint32_t op2)
 {
   DAI_set_zero(rop);
   DAI_t acc = rop;
@@ -356,7 +359,7 @@ DAI_ret_t DAI_mult_smol_int(DAI_t rop, DAI_t op1, uint32_t op2)
 
   for (DAI_prec_t i = 0; i < op1->prec; ++i)
   {
-    DAI_mult_dec_unit(digit_res, op1->data[i], op2);
+    DAI_mul_dec_unit(digit_res, op1->data[i], op2);
     DAI_add(acc2, acc, digit_res);
 
     // pointer swap
@@ -368,8 +371,16 @@ DAI_ret_t DAI_mult_smol_int(DAI_t rop, DAI_t op1, uint32_t op2)
   return DAI_RET_OK;
 }
 
-DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2)
+DAI_ret_t DAI_mul(DAI_t rop, DAI_t op1, DAI_t op2)
 {
+  assert(rop != op1 && rop != op2);
+
+  if (DAI_IS_ZERO(*op1) || DAI_IS_ZERO(*op2))
+  {
+    DAI_SET_FLAG(*rop, DAI_FLAGS_ZERO);
+    return DAI_RET_OK;
+  }
+
   DAI_prec_t min_prec = op1->prec > op2->prec ? op1->prec : op2->prec;
 
   if (rop->prec < min_prec)
@@ -377,7 +388,8 @@ DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2)
 
   if (op1->prec > DAI_PREC_MAX - op2->prec)
   {
-    fprintf(stderr, DAI_ERROR "the precision of the ints provided adds up to more than %" PRIu64 "(DAI_PREC_MAX), which is the maxium supported\n", DAI_PREC_MAX);
+    fprintf(stderr, DAI_ERROR "the precision of the ints provided adds up to more than %" PRIPREC " (DAI_PREC_MAX), which is the maximum supported\n",
+            DAI_PREC_MAX);
     return DAI_RET_PREC_ERROR;
   }
   // DAI_prec_t max_prec = op1->prec + op2->prec;
@@ -393,7 +405,7 @@ DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2)
   {
     for (DAI_prec_t j = 0; j < op1->prec; ++j)
     {
-      DAI_CHECK_RET_VALUE(DAI_mult_dec_unit(digit_res, op2->data[i], op1->data[j]));
+      DAI_CHECK_RET_VALUE(DAI_mul_dec_unit(digit_res, op2->data[i], op1->data[j]));
 
       DAI_CHECK_RET_VALUE(DAI_add_shift(acc2, acc, 0, digit_res, i + j));
       // pointer swap

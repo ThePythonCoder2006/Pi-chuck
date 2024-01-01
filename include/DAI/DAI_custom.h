@@ -11,6 +11,7 @@ typedef uint32_t DAI_dec_unit_t;
 
 typedef uint64_t DAI_prec_t;
 #define DAI_PREC_MAX (UINT64_MAX)
+#define PRIPREC PRIu64
 
 typedef struct DAI_s
 {
@@ -55,7 +56,12 @@ extern DAI_ret_t DAI_CHECK_ret;
 #define DAI_FLAGS_ZERO (0x1)
 #define DAI_FLAGS_NEGA (0x2)
 
-#define DAI_IS_ZERO(op) ((op->flags | DAI_FLAGS_ZERO) == op->flags)
+#define DAI_IS_FLAG(op, flag) (((op).flags | (flag)) == (op).flags)
+#define DAI_SET_FLAG(op, flag) (op).flags |= (flag)
+#define DAI_CLEAR_FLAG(op, flag) (op).flags &= ~(flag)
+
+#define DAI_IS_ZERO(op) DAI_IS_FLAG((op), DAI_FLAGS_ZERO)
+#define DAI_IS_NEGA(op) DAI_IS_FLAG((op), DAI_FLAGS_NEGA)
 
 #define DAI_GET_PREC(op) (op->prec)
 

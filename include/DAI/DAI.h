@@ -30,8 +30,8 @@ DAI_ret_t DAI_set(DAI_t rop, DAI_t op);
 
 DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2);
-DAI_ret_t DAI_mult(DAI_t rop, DAI_t op1, DAI_t op2);
-DAI_ret_t DAI_mult_smol_int(DAI_t rop, DAI_t op1, uint32_t op2);
+DAI_ret_t DAI_mul(DAI_t rop, DAI_t op1, DAI_t op2);
+DAI_ret_t DAI_mul_smol_int(DAI_t rop, DAI_t op1, uint32_t op2);
 
 DAI_ret_t DAI_print(DAI_t op);
 
