@@ -52,18 +52,75 @@ Remark that $ 426880 \sqrt{10005} $ is the positive root of $ f(x) = x^2
 }
 
 \section{Newton's method}
-let $ f$ be a smooth function: $ f : \R \to \R$
+let $a \in \R$ such that $\forall x \in \R,\ f(x) = x^2 - a$\\
+the roots of $f$ are quite clearly $\sqrt{a} $ and $-\sqrt{a} $\\
+let $\alpha$ be the positive root of  $f$: $\alpha = \sqrt{a}$ 
+It follows from $f$'s definition that:
+\begin{align*}
+	 &\forall x \in \R,\ f'(x) = 2x\\
+	 &\forall x \in \R,\ f''(x) = 2 \\
+\end{align*}
+
 
 \noindent
-let $ {(x_n)}_{n \in \N}$ be a series defined by:
+Observe that:
+\begin{align*}
+	\forall (\alpha, x_n) \in \R^2 ,\ x_n^2 - a + 2x_n(\alpha - x_n) + \frac{1}{2}2(\alpha - x_n)^2 &= x_n^2 - a + 2\alpha x_n - 2x_n^2 + \alpha ^2 - 2\alpha x_n + x_n^2 \\
+	&= x_n^2 - a + 2\alpha x_n - 2x_n^2 + \alpha ^2 - 2\alpha x_n + x_n^2\\
+	&= \Ccancel[white]{x_n^2 + x_n^2 - 2x_n^2} - a + \alpha ^2 + \Ccancel[white]{2\alpha x_n - 2\alpha x_n} \\
+	&= \alpha^2 - a \\
+	x_n^2 - a + 2x_n(\alpha - x_n) + \frac{1}{2}2(\alpha - x_n)^2 &= f(\alpha) \tag{1} \\
+\end{align*}
+
+Note that:
+\begin{align*}
+	f'(x) = 0 \iff x = 0 \\
+	\implies \forall \epsilon _0 \in ]0; \alpha[,\ x \in [\alpha - \epsilon _0; \alpha + \epsilon _0] \implies x > 0 \implies f'(x) \neq 0 \tag{2}
+\end{align*}
+
+\noindent
+Let $g \in \R$ be an initial guess of $\alpha$ \\
+And let $ {(x_n)}_{n \in \N}$ be a sequence defined by:
 \begin{align*}
   \left\{
   \begin{aligned}
-    x_0                                & = \text{a guess sufficiently close to the root} \\
+    x_0                                & = g \\
     \quad \forall n \in \N,\ x_{n + 1} & = x_n - \frac{f(x_n)}{f'(x_n)}
   \end{aligned}
   \right.
 \end{align*}
+and let $(\epsilon _n)_{n \in \N}$ be a sequence defined by : $\forall n \in \N,\ \epsilon _n = \alpha - x_n$
+
+\clm{existance of $x_n$}{}{
+	\begin{align*}
+		g = x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0] \implies &\forall n \in \N,\ f'(x_n) \neq 0 \\
+		\implies &\forall n \in \N,\ x_n \in \R
+	\end{align*}
+}
+
+\pf{existance of $x_n$}{}{
+	\noindent
+	let $\forall n \in \N,\ P_n$ be a propostion s.t. $\forall n \in \N,\ P_n: g = x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0] \implies x_n \in [\alpha - \epsilon _0; \alpha + \epsilon _0]$\\
+	By induction:\\
+	Initialisation: case $n = 0$: $x_0 = g \in [\alpha - \epsilon _0; \alpha + \epsilon _0]$ it immidiatly follows that $x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0]$
+	Induction: \\
+	let $n \in \N$ s.t. $P_n$ is verified:\\
+	\begin{align*}
+		g = x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0] &\implies x_n \in [\alpha - \epsilon _0; \alpha + \epsilon _0]\\
+		\iff g = x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0] &\implies \alpha - \epsilon _0 \le x_n \le \alpha + \epsilon _0
+		&\iff
+	\end{align*}
+}
+
+\clm{convergence of $(x_n)_{n \in \N}$}{}{
+	\[
+		g \in ]0; \alpha[ \implies (x_n)_{n \in \N}\ \text{converges to}\ \alpha
+	\] 
+}
+
+\pf{convergence of $(x_n)_{n \in \N}$}{
+
+}
 
 \chapter{computing the sum}
 
