@@ -221,7 +221,7 @@ static DAI_ret_t DAI_add_shift(DAI_t rop, DAI_t op1, DAI_prec_t op1_shift, DAI_t
   DAI_prec_t max_shift = op1_shift > op2_shift ? op1_shift : op2_shift;
   DAI_t lower_op = op1_shift < op2_shift ? op1 : op2;
 
-  printf("%llu < %llu\n", rop->prec, min_prec);
+  // printf("%" PRIu64 " < %" PRIu64 "\n", rop->prec, min_prec);
 
   if (rop->prec < min_prec)
     return DAI_RET_PREC_ERROR;
@@ -239,6 +239,9 @@ static DAI_ret_t DAI_add_shift(DAI_t rop, DAI_t op1, DAI_prec_t op1_shift, DAI_t
       rop->data[i] = lower_op->data[i - min_shift];
       continue;
     }
+
+    if (i - op1_shift >= op1->prec || i - op2_shift >= op2->prec)
+      continue;
 
     rop->data[i] = op1->data[i - op1_shift] + op2->data[i - op2_shift];
     if (rop->data[i] >= DAI_DEC_UNIT_MAX)
@@ -322,7 +325,7 @@ static DAI_ret_t DAI_mul_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t 
 {
   if (rop->prec < 2)
   {
-    fprintf(stderr, DAI_ERROR "the precision of the given ret value was not enough: %" PRIPREC " < %llu."
+    fprintf(stderr, DAI_ERROR "the precision of the given ret value was not enough: %" PRIPREC " < %" PRIu64 "."
                               " If you're not an experienced developper you should not use DAI_mul_dec_unit by yourself."
                               " If you did not call this function yourself, please report this bug to the github repo. (%s)\n",
             rop->prec, 2ULL, "https://www.github.com/ThePythonCoder2006/Pi-chuck");

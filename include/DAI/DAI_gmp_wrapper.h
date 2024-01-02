@@ -12,7 +12,7 @@ typedef mpz_t DAI_t;
 
 #define DAI_GET_PREC(...)
 
-#define DAI_INIT(rop, ...) mpz_init((*rop))
+#define DAI_INIT(rop, prec) mpz_init((*rop))
 
 #define DAI_CHECK_RET_VALUE(fn, ...) fn
 

@@ -65,7 +65,7 @@ extern DAI_ret_t DAI_CHECK_ret;
 
 #define DAI_GET_PREC(op) (op->prec)
 
-#define DAI_INIT(rop, prec, ...) DAI_init((rop), (prec))
+#define DAI_INIT(rop, prec) DAI_init((rop), (prec))
 DAI_ret_t DAI_init(DAI_ptr rop, uint64_t prec);
 
 DAI_errormsg *DAI_strerror(DAI_ret_t op);

@@ -28,8 +28,8 @@ int main(int argc, char **argv)
   DAI_INIT(&B, PREC);
   DAI_INIT(&S, 5 * PREC);
 
-  DAI_CHECK_RET_VALUE(DAI_set_ui(A, 2));
-  DAI_CHECK_RET_VALUE(DAI_set_ui(B, 3));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(A, 1ULL << 63));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(B, 1ULL << 63));
 
   printf("  ");
   DAI_print(A);
