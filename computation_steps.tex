@@ -42,13 +42,14 @@ with
 \chapter{computing $ 426880\sqrt{10005} $}
 
 Remark that $ 426880 \sqrt{10005} $ is the positive root of $ f(x) = x^2
-  -426880^2 \cdot 10005$ \pf{Proof}{
-  \begin{align*}
-    x ^2 - 426880 ^2 \cdot 10005 & = 0                                \\
-    \iff x ^2                    & = 426880 ^2 \cdot 10005            \\
-    \iff x                       & = \pm \sqrt{426880 ^2 \cdot 10005} \\
-    \iff x                       & = \pm 426880 \sqrt{10005}
-  \end{align*}
+  -426880^2 \cdot 10005$
+\pf{}{
+	\begin{alignat*}{3}
+    &&x ^2 - 426880 ^2 \cdot 10005 & = 0                                \\
+    &\iff& x ^2                    & = 426880 ^2 \cdot 10005            \\
+    &\iff& x                       & = \pm \sqrt{426880 ^2 \cdot 10005} \\
+    &\iff& x                       & = \pm 426880 \sqrt{10005}
+  \end{alignat*}
 }
 
 \section{Newton's method}
@@ -102,14 +103,14 @@ and let $(\epsilon _n)_{n \in \N}$ be a sequence defined by : $\forall n \in \N,
 	\noindent
 	let $\forall n \in \N,\ P_n$ be a propostion s.t. $\forall n \in \N,\ P_n: g = x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0] \implies x_n \in [\alpha - \epsilon _0; \alpha + \epsilon _0]$\\
 	By induction:\\
-	Initialisation: case $n = 0$: $x_0 = g \in [\alpha - \epsilon _0; \alpha + \epsilon _0]$ it immidiatly follows that $x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0]$
+	Initialisation: case $n = 0$: $x_0 = g \in [\alpha - \epsilon _0; \alpha + \epsilon _0]$ it immidiatly follows that $x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0]$\\
 	Induction: \\
-	let $n \in \N$ s.t. $P_n$ is verified:\\
-	\begin{align*}
-		g = x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0] &\implies x_n \in [\alpha - \epsilon _0; \alpha + \epsilon _0]\\
-		\iff g = x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0] &\implies \alpha - \epsilon _0 \le x_n \le \alpha + \epsilon _0
-		&\iff
-	\end{align*}
+	let $n \in \N$ s.t. $P_n$ is verified:
+	\begin{alignat*}{3}
+		&&g = x_0 \in [\alpha - \epsilon _0; \alpha + \epsilon _0] \implies &x_n \in [\alpha - \epsilon _0; \alpha + \epsilon _0]\\
+		&\iff& &\alpha - \epsilon _0 \le x_n \le \alpha + \epsilon _0\\
+		&\iff &
+	\end{alignat*}
 }
 
 \clm{convergence of $(x_n)_{n \in \N}$}{}{
