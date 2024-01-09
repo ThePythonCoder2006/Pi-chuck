@@ -28,8 +28,8 @@ int main(int argc, char **argv)
   DAI_INIT(&B, PREC);
   DAI_INIT(&S, PREC);
 
-  DAI_CHECK_RET_VALUE(DAI_set_ui(A, (1ULL << 32) + 1));
-  DAI_CHECK_RET_VALUE(DAI_set_ui(B, (1ULL << 32)));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(A, (1ULL << 0)));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(B, (1ULL << 32) + 1));
 
   printf("A = ");
   DAI_print(A);
@@ -39,12 +39,12 @@ int main(int argc, char **argv)
 
   int8_t rop = 0;
 
-  DAI_CHECK_RET_VALUE(DAI_cmp(&rop, A, B), "could not compare A and B : ");
+  DAI_CHECK_RET_VALUE(DAI_sub(S, A, B), "could not compare A and B : ");
 
-  // printf("\n  ");
-  // DAI_print(S);
-  printf("A %c B\n", rop < 0 ? '<' : (rop == 0 ? '=' : '>'));
-  // putchar('\n');
+  printf("\n  ");
+  DAI_print(S);
+  // printf("A %c B\n", rop < 0 ? '<' : (rop == 0 ? '=' : '>'));
+  putchar('\n');
 
   DAI_clean(&A);
   DAI_clean(&B);

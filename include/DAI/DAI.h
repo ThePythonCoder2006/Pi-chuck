@@ -36,5 +36,6 @@ DAI_ret_t DAI_mul_smol_int(DAI_t rop, DAI_t op1, uint32_t op2);
 DAI_ret_t DAI_cmp(int8_t *rop, DAI_t A, DAI_t B);
 
 DAI_ret_t DAI_print(DAI_t op);
+DAI_ret_t DAI_fprint(FILE *f, DAI_t op);
 
 #endif // __DAI_H__

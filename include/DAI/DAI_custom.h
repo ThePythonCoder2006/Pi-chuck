@@ -50,6 +50,8 @@ extern DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1];
 
 extern DAI_ret_t DAI_CHECK_ret;
 
+#define GITHUB_REPO_URL "https://www.github.com/ThePythonCoder2006/Pi-chuck"
+
 // flags
 
 #define DAI_FLAGS_NONE (0x0)

@@ -271,6 +271,23 @@ DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
 {
   assert(rop != op1 && rop != op2);
 
+  DAI_set_zero(rop);
+
+  int8_t cmp = 0;
+  DAI_CHECK_RET_VALUE(DAI_cmp(&cmp, op1, op2), "Could not compare op1 and op2. This should be unreachable, if you encouter this error please report it to the github repo :" GITHUB_REPO_URL);
+
+  if (cmp == 0)
+    return DAI_RET_OK; // rop was already set to 0 jsut before
+
+  if (cmp < 0)
+  // result is negative
+  {
+    DAI_SET_FLAG(*rop, DAI_FLAGS_NEGA);
+    DAI_t tmp = op1;
+    op1 = op2;
+    op2 = tmp;
+  }
+
   if (DAI_IS_ZERO(*op1) && DAI_IS_ZERO(*op2))
   {
     rop->flags |= DAI_FLAGS_ZERO;
@@ -327,8 +344,8 @@ static DAI_ret_t DAI_mul_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t 
   {
     fprintf(stderr, DAI_ERROR "the precision of the given ret value was not enough: %" PRIPREC " < %" PRIu64 "."
                               " If you're not an experienced developper you should not use DAI_mul_dec_unit by yourself."
-                              " If you did not call this function yourself, please report this bug to the github repo. (%s)\n",
-            rop->prec, 2ULL, "https://www.github.com/ThePythonCoder2006/Pi-chuck");
+                              " If you did not call this function yourself, please report this bug to the github repo. (" GITHUB_REPO_URL ")\n",
+            rop->prec, 2ULL);
     return DAI_RET_PREC_ERROR;
   }
 
@@ -510,23 +527,28 @@ DAI_ret_t DAI_cmp(int8_t *rop, DAI_t A, DAI_t B)
   return DAI_RET_OK;
 }
 
-DAI_ret_t DAI_print(DAI_t op)
+DAI_ret_t DAI_fprint(FILE *f, DAI_t op)
 {
-  if ((op->flags | DAI_FLAGS_ZERO) == op->flags)
+  if (DAI_IS_FLAG(*op, DAI_FLAGS_ZERO))
   {
-    printf("0");
+    putc('0', f);
     return DAI_RET_OK;
   }
+
+  if (DAI_IS_FLAG(*op, DAI_FLAGS_NEGA))
+    putc('-', f);
 
   DAI_prec_t start = 0;
   while (op->data[op->prec - (start++) - 1] == 0 && start < op->prec)
     ;
-  printf("%u ", op->data[op->prec - start]);
+  fprintf(f, "%u ", op->data[op->prec - start]);
   for (DAI_prec_t i = start; i < op->prec; ++i)
-    printf("%09u ", op->data[op->prec - i - 1]);
+    fprintf(f, "%09u ", op->data[op->prec - i - 1]);
 
   return DAI_RET_OK;
 }
+
+DAI_ret_t DAI_print(DAI_t op) { return DAI_fprint(stdout, op); }
 
 DAI_errormsg *DAI_strerror(DAI_ret_t op)
 {
