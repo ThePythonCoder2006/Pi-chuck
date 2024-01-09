@@ -5,7 +5,7 @@
 
 #include "DAI.h"
 
-#define PREC (5)
+#define PREC (200)
 
 int main(int argc, char **argv)
 {
@@ -26,22 +26,25 @@ int main(int argc, char **argv)
   DAI_t A, B, S;
   DAI_INIT(&A, PREC);
   DAI_INIT(&B, PREC);
-  DAI_INIT(&S, 5 * PREC);
+  DAI_INIT(&S, PREC);
 
-  DAI_CHECK_RET_VALUE(DAI_set_ui(A, 1ULL << 63));
-  DAI_CHECK_RET_VALUE(DAI_set_ui(B, 1ULL << 63));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(A, (1ULL << 32) + 1));
+  DAI_CHECK_RET_VALUE(DAI_set_ui(B, (1ULL << 32)));
 
-  printf("  ");
+  printf("A = ");
   DAI_print(A);
-  printf("\nx ");
+  printf("\nB = ");
   DAI_print(B);
   printf("\n______________________________\n");
 
-  DAI_CHECK_RET_VALUE(DAI_mul(S, A, B), "could not multiply A and B : ");
+  int8_t rop = 0;
 
-  printf("\n= ");
-  DAI_print(S);
-  putchar('\n');
+  DAI_CHECK_RET_VALUE(DAI_cmp(&rop, A, B), "could not compare A and B : ");
+
+  // printf("\n  ");
+  // DAI_print(S);
+  printf("A %c B\n", rop < 0 ? '<' : (rop == 0 ? '=' : '>'));
+  // putchar('\n');
 
   DAI_clean(&A);
   DAI_clean(&B);
@@ -51,10 +54,11 @@ int main(int argc, char **argv)
 }
 
 /*
- * computes (426880 * sqrt(10005)) * one using the so called Newton's coupled iteration
+ * computes (426880 * sqrt(10005)) * 2 * half using Newton method
  */
-int compute_const(DAI_t rop, DAI_t one)
+int compute_const(DAI_t rop, DAI_t half)
 {
+  (void)rop, (void)half;
 
   return 0;
 }

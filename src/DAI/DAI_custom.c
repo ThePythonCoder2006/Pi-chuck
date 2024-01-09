@@ -421,6 +421,95 @@ DAI_ret_t DAI_mul(DAI_t rop, DAI_t op1, DAI_t op2)
   return DAI_RET_OK;
 }
 
+/*
+ * sets rop < 0 <=> A  < B
+ *      rop = 0 <=> A == B
+ *      rop > 0 <=> A  > B
+ */
+DAI_ret_t DAI_cmp(int8_t *rop, DAI_t A, DAI_t B)
+{
+  if (DAI_IS_ZERO(*A))
+  {
+    if (DAI_IS_ZERO(*B))
+      *rop = 0;
+    else
+    {
+      if (DAI_IS_NEGA(*B))
+        *rop = 1;
+      else
+        *rop = -1;
+    }
+    return DAI_RET_OK;
+  }
+
+  if (DAI_IS_ZERO(*B))
+  {
+    if (DAI_IS_NEGA(*A))
+      *rop = -1;
+    else
+      *rop = 1;
+    return DAI_RET_OK;
+  }
+
+  if (DAI_IS_NEGA(*A))
+  {
+    if (!DAI_IS_NEGA(*B))
+    {
+      *rop = -1;
+      return DAI_RET_OK;
+    }
+  }
+
+  DAI_t max_prec_op = A->prec >= B->prec ? A : B;
+  DAI_t min_prec_op = A->prec >= B->prec ? B : A;
+
+  DAI_prec_t max_prec = A->prec >= B->prec ? A->prec : B->prec;
+  DAI_prec_t min_prec = A->prec >= B->prec ? B->prec : A->prec;
+
+  for (DAI_prec_t i = max_prec - 1; i > min_prec; --i)
+    if (max_prec_op->data[i] != 0)
+    {
+      // max_prec_op > min_prec_op
+      *rop = 2 * (max_prec_op == A) - 1;
+      return DAI_RET_OK;
+    }
+
+  if (max_prec > min_prec)
+    /*
+     * check case i = min_prec
+     * this needs to be separated in order to work in the case min_prec = 0
+     */
+    if (max_prec_op->data[min_prec] != 0)
+    {
+      // max_prec_op > min_prec_op
+      *rop = 2 * (max_prec_op == A) - 1;
+      return DAI_RET_OK;
+    }
+
+  for (DAI_prec_t i = min_prec - 1; i > 0; --i)
+  {
+    if (max_prec_op->data[i] == min_prec_op->data[i])
+      continue;
+
+    if (max_prec_op->data[i] > min_prec_op->data[i])
+      *rop = 2 * (max_prec_op == A) - 1;
+    else // min_prec_op < max_prec_op
+      *rop = 2 * (min_prec_op == A) - 1;
+    return DAI_RET_OK;
+  }
+
+  // default value
+  *rop = 0;
+
+  // testing cas i = 0
+  if (max_prec_op->data[0] > min_prec_op->data[0])
+    *rop = 2 * (max_prec_op == A) - 1;
+  else if (max_prec_op->data[0] < min_prec_op->data[0])
+    *rop = 2 * (min_prec_op == A) - 1;
+
+  return DAI_RET_OK;
+}
+
 DAI_ret_t DAI_print(DAI_t op)
 {
   if ((op->flags | DAI_FLAGS_ZERO) == op->flags)
