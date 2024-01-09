@@ -28,11 +28,15 @@ DAI_ret_t DAI_correct_flags(DAI_t rop);
 DAI_ret_t DAI_set_ui(DAI_t rop, uint64_t op);
 DAI_ret_t DAI_set(DAI_t rop, DAI_t op);
 
+DAI_ret_t DAI_add_abs(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2);
+DAI_ret_t DAI_negate(DAI_t rop, DAI_t op);
+DAI_ret_t DAI_sub_abs(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_mul(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_mul_smol_int(DAI_t rop, DAI_t op1, uint32_t op2);
 
+DAI_ret_t DAI_cmp_abs(int8_t *rop, DAI_t A, DAI_t B);
 DAI_ret_t DAI_cmp(int8_t *rop, DAI_t A, DAI_t B);
 
 DAI_ret_t DAI_print(DAI_t op);

@@ -92,15 +92,16 @@ DAI_ret_t DAI_set_ui(DAI_t rop, uint64_t op)
 
 DAI_ret_t DAI_set(DAI_t rop, DAI_t op)
 {
-  if (rop->prec != op->prec)
+  if (rop->prec < op->prec)
   {
     fprintf(stderr, DAI_TODO "copying ints with different precision is not (yet) implemented !!\n");
     return DAI_RET_TODO;
   }
+  // rop->prec >= op->prec
 
   rop->flags = op->flags;
   rop->prec = op->prec;
-  memcpy(rop->data, op->data, rop->prec * sizeof(rop->data[0]));
+  memcpy(rop->data, op->data, op->prec * sizeof(op->data[0]));
 
   return DAI_RET_OK;
 }
@@ -158,17 +159,19 @@ DAI_ret_t DAI_handle_carrys(DAI_t rop, DAI_add_carry_t *carrys, size_t carrys_si
   return DAI_RET_OK;
 }
 
-DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2)
+DAI_ret_t DAI_add_abs(DAI_t rop, DAI_t op1, DAI_t op2)
 {
   assert(rop != op1 && rop != op2);
 
+  DAI_set_zero(rop);
+
   if (DAI_IS_ZERO(*op1) && DAI_IS_ZERO(*op2))
   {
-    rop->flags |= DAI_FLAGS_ZERO;
+    DAI_SET_FLAG(*rop, DAI_FLAGS_ZERO);
     return DAI_RET_OK;
   }
   else
-    rop->flags &= ~DAI_FLAGS_ZERO;
+    DAI_CLEAR_FLAG(*rop, DAI_FLAGS_ZERO);
 
   DAI_prec_t min_prec = op1->prec < op2->prec ? op1->prec : op2->prec;
 
@@ -200,6 +203,24 @@ DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2)
   free(carrys);
 
   return DAI_RET_OK;
+}
+
+DAI_ret_t DAI_add(DAI_t rop, DAI_t op1, DAI_t op2)
+{
+  if (DAI_IS_NEGA(*op1) && DAI_IS_NEGA(*op2)) // (-op1) + (-op2)  = -(op1 + op2)
+  {
+    DAI_CHECK_RET_VALUE(DAI_add_abs(rop, op1, op2), "Could not add the two numbers");
+    rop->flags |= DAI_FLAGS_NEGA;
+    return DAI_RET_OK;
+  }
+
+  if (DAI_IS_NEGA(*op2)) // op1 + (-op2) = op1 - op2
+    return DAI_sub_abs(rop, op1, op2);
+
+  if (DAI_IS_NEGA(*op1)) // (-op1) + op2 = op2 - op1
+    return DAI_sub_abs(rop, op2, op1);
+
+  return DAI_add_abs(rop, op1, op2);
 }
 
 /*
@@ -264,17 +285,35 @@ static DAI_ret_t DAI_add_shift(DAI_t rop, DAI_t op1, DAI_prec_t op1_shift, DAI_t
   return DAI_RET_OK;
 }
 
+DAI_ret_t DAI_negate(DAI_t rop, DAI_t op)
+{
+  DAI_set(rop, op);
+  rop->flags = op->flags ^ DAI_FLAGS_NEGA;
+  return DAI_RET_OK;
+}
+
 /*
  * computes rop = op1 - op2
  */
-DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
+DAI_ret_t DAI_sub_abs(DAI_t rop, DAI_t op1, DAI_t op2)
 {
   assert(rop != op1 && rop != op2);
 
   DAI_set_zero(rop);
 
+  if (DAI_IS_ZERO(*op1)) // 0 - op2 = -op2
+    return DAI_negate(rop, op2);
+
+  if (DAI_IS_ZERO(*op1) && DAI_IS_ZERO(*op2))
+  {
+    rop->flags |= DAI_FLAGS_ZERO;
+    return DAI_RET_OK;
+  }
+  else
+    rop->flags &= ~DAI_FLAGS_ZERO;
+
   int8_t cmp = 0;
-  DAI_CHECK_RET_VALUE(DAI_cmp(&cmp, op1, op2), "Could not compare op1 and op2. This should be unreachable, if you encouter this error please report it to the github repo :" GITHUB_REPO_URL);
+  DAI_CHECK_RET_VALUE(DAI_cmp_abs(&cmp, op1, op2), "Could not compare op1 and op2. " DAI_UNREACHABLE_MESSAGE);
 
   if (cmp == 0)
     return DAI_RET_OK; // rop was already set to 0 jsut before
@@ -287,14 +326,6 @@ DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
     op1 = op2;
     op2 = tmp;
   }
-
-  if (DAI_IS_ZERO(*op1) && DAI_IS_ZERO(*op2))
-  {
-    rop->flags |= DAI_FLAGS_ZERO;
-    return DAI_RET_OK;
-  }
-  else
-    rop->flags &= ~DAI_FLAGS_ZERO;
 
   DAI_prec_t max_prec = op1->prec > op2->prec ? op1->prec : op2->prec;
 
@@ -332,6 +363,24 @@ DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
   free(carrys);
 
   return DAI_RET_OK;
+}
+
+DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
+{
+  if (DAI_IS_NEGA(*op1) && DAI_IS_NEGA(*op2)) // (-op1) - (-op2) = op2 - op1
+    return DAI_sub_abs(rop, op2, op1);
+
+  if (DAI_IS_NEGA(*op1)) // (-op1) - op2 = -(op1 + op2)
+  {
+    DAI_CHECK_RET_VALUE(DAI_add_abs(rop, op1, op2), "Could not substract the two numbers : ");
+    rop->flags |= DAI_FLAGS_NEGA;
+    return DAI_RET_OK;
+  }
+
+  if (DAI_IS_NEGA(*op2)) // op1 - (-op2) = op1 + op2
+    return DAI_add_abs(rop, op1, op2);
+
+  return DAI_sub_abs(rop, op1, op2);
 }
 
 /*
@@ -395,11 +444,15 @@ DAI_ret_t DAI_mul(DAI_t rop, DAI_t op1, DAI_t op2)
 {
   assert(rop != op1 && rop != op2);
 
+  DAI_set_zero(rop);
+
   if (DAI_IS_ZERO(*op1) || DAI_IS_ZERO(*op2))
   {
     DAI_SET_FLAG(*rop, DAI_FLAGS_ZERO);
     return DAI_RET_OK;
   }
+
+  rop->flags |= DAI_FLAGS_NEGA * ((DAI_IS_NEGA(*op1) + DAI_IS_NEGA(*op2)) & 0x1); // & 0x1 <=> % 2
 
   DAI_prec_t min_prec = op1->prec > op2->prec ? op1->prec : op2->prec;
 
@@ -414,7 +467,6 @@ DAI_ret_t DAI_mul(DAI_t rop, DAI_t op1, DAI_t op2)
   }
   // DAI_prec_t max_prec = op1->prec + op2->prec;
 
-  DAI_set_zero(rop);
   DAI_t acc = rop; // acc points to the same place as rop
   DAI_t acc2;
   DAI_init(&acc2, acc->prec);
@@ -443,38 +495,14 @@ DAI_ret_t DAI_mul(DAI_t rop, DAI_t op1, DAI_t op2)
  *      rop = 0 <=> A == B
  *      rop > 0 <=> A  > B
  */
-DAI_ret_t DAI_cmp(int8_t *rop, DAI_t A, DAI_t B)
+DAI_ret_t DAI_cmp_abs(int8_t *rop, DAI_t A, DAI_t B)
 {
   if (DAI_IS_ZERO(*A))
   {
+    *rop = 1;
     if (DAI_IS_ZERO(*B))
       *rop = 0;
-    else
-    {
-      if (DAI_IS_NEGA(*B))
-        *rop = 1;
-      else
-        *rop = -1;
-    }
     return DAI_RET_OK;
-  }
-
-  if (DAI_IS_ZERO(*B))
-  {
-    if (DAI_IS_NEGA(*A))
-      *rop = -1;
-    else
-      *rop = 1;
-    return DAI_RET_OK;
-  }
-
-  if (DAI_IS_NEGA(*A))
-  {
-    if (!DAI_IS_NEGA(*B))
-    {
-      *rop = -1;
-      return DAI_RET_OK;
-    }
   }
 
   DAI_t max_prec_op = A->prec >= B->prec ? A : B;
@@ -525,6 +553,43 @@ DAI_ret_t DAI_cmp(int8_t *rop, DAI_t A, DAI_t B)
     *rop = 2 * (min_prec_op == A) - 1;
 
   return DAI_RET_OK;
+}
+
+DAI_ret_t DAI_cmp(int8_t *rop, DAI_t A, DAI_t B)
+{
+  if (DAI_IS_ZERO(*A))
+  {
+    if (DAI_IS_ZERO(*B))
+      *rop = 0;
+    else
+    {
+      if (DAI_IS_NEGA(*B))
+        *rop = 1;
+      else
+        *rop = -1;
+    }
+    return DAI_RET_OK;
+  }
+
+  if (DAI_IS_ZERO(*B))
+  {
+    if (DAI_IS_NEGA(*A))
+      *rop = -1;
+    else
+      *rop = 1;
+    return DAI_RET_OK;
+  }
+
+  if (DAI_IS_NEGA(*A))
+  {
+    if (!DAI_IS_NEGA(*B))
+    {
+      *rop = -1;
+      return DAI_RET_OK;
+    }
+  }
+
+  return DAI_cmp_abs(rop, A, B);
 }
 
 DAI_ret_t DAI_fprint(FILE *f, DAI_t op)

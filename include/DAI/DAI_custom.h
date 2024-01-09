@@ -51,6 +51,7 @@ extern DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1];
 extern DAI_ret_t DAI_CHECK_ret;
 
 #define GITHUB_REPO_URL "https://www.github.com/ThePythonCoder2006/Pi-chuck"
+#define DAI_UNREACHABLE_MESSAGE "This should be unreachable, if you encouter this error please report it to the github repo :" GITHUB_REPO_URL
 
 // flags
 
