@@ -58,8 +58,9 @@ DAI_ret_t DAI_correct_flags(DAI_t rop)
 
 DAI_ret_t DAI_set_zero(DAI_t rop)
 {
-  for (DAI_prec_t i = 0; i < rop->prec; ++i)
-    rop->data[i] = 0;
+  // for (DAI_prec_t i = 0; i < rop->prec; ++i)
+  //   rop->data[i] = 0;
+  memset(rop->data, 0, rop->prec * sizeof(DAI_dec_unit_t));
 
   rop->flags = DAI_FLAGS_ZERO;
 
@@ -486,6 +487,79 @@ DAI_ret_t DAI_mul(DAI_t rop, DAI_t op1, DAI_t op2)
       acc2 = tmp;
     }
   }
+
+  return DAI_RET_OK;
+}
+
+/*
+ * shift righ logical in base BILLION
+ * shift only in increments of 10^9
+ * rop = op * 10^(-9n)
+ * digits that do no fit on the right will be disgarded
+ */
+DAI_ret_t DAI_srl(DAI_t rop, DAI_t op, DAI_prec_t n)
+{
+  assert(rop != op);
+
+  if (n == 0)
+  {
+    DAI_set(rop, op);
+    return DAI_RET_OK;
+  }
+
+  rop->flags = op->flags;
+
+  if (op->prec > n)
+    memcpy(rop->data, op->data + n, (op->prec - n) * sizeof(DAI_dec_unit_t));
+  else
+    DAI_set_zero(rop);
+
+  return DAI_RET_OK;
+}
+
+/*
+ * shift right logical in base 10
+ * rop = op * 10^(-n)
+ * digits that do not fit on the right are disgarded
+ */
+DAI_ret_t DAI_srl_dec(DAI_t rop, DAI_t op, DAI_prec_t n)
+{
+  if (n == 0)
+  {
+    DAI_set(rop, op);
+    return DAI_RET_OK;
+  }
+
+  uint32_t lut[10] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
+
+  DAI_prec_t broad = n / 9;
+  uint8_t fine = n % 9;
+  DAI_dec_unit_t div = lut[fine];
+
+  DAI_srl(rop, op, broad);
+
+  if (fine == 0)
+    return DAI_RET_OK;
+
+  DAI_prec_t prev = 0;
+  for (DAI_prec_t i = op->prec - 1; i > 0; --i)
+  {
+    DAI_dec_unit_t tmp = rop->data[i];
+    // printf("%lu ", tmp);
+    rop->data[i] /= div;
+    // printf("(rop[%3llu]) / %lu = %lu\t", i, div, rop->data[i]);
+    rop->data[i] += prev * lut[10 - fine - 1];
+    // printf("prev : %llu\n", prev);
+    prev = tmp % div;
+  }
+
+  DAI_dec_unit_t tmp = rop->data[0];
+  // printf("%lu  ", tmp);
+  rop->data[0] /= div;
+  // printf("(rop[%3llu]) / %lu = %lu\t", 0, div, rop->data[0]);
+  rop->data[0] += prev * lut[10 - fine - 1];
+  // printf("prev : %llu\n", prev);
+  prev = tmp % div;
 
   return DAI_RET_OK;
 }

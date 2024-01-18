@@ -35,6 +35,8 @@ DAI_ret_t DAI_sub_abs(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_mul(DAI_t rop, DAI_t op1, DAI_t op2);
 DAI_ret_t DAI_mul_smol_int(DAI_t rop, DAI_t op1, uint32_t op2);
+DAI_ret_t DAI_srl(DAI_t rop, DAI_t op, DAI_prec_t n);
+DAI_ret_t DAI_srl_dec(DAI_t rop, DAI_t op, DAI_prec_t n);
 
 DAI_ret_t DAI_cmp_abs(int8_t *rop, DAI_t A, DAI_t B);
 DAI_ret_t DAI_cmp(int8_t *rop, DAI_t A, DAI_t B);
