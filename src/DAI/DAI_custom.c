@@ -9,8 +9,10 @@
 
 #ifndef __DAI_USE_GMP__
 
-DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1] = {
-    "nothing went wrong !",
+const uint32_t pow_10_lut[10] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
+
+const DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1] = {
+    "nothing went wrong",
     "the precision of the int given was not enough to perform the calculations that were asked !",
     "some memory could not be allocated !",
     "this function is not yet implemented !",
@@ -340,7 +342,7 @@ DAI_ret_t DAI_sub_abs(DAI_t rop, DAI_t op1, DAI_t op2)
 
   for (DAI_prec_t i = 0; i < max_prec; ++i)
   {
-    if (op2->data[i] > op1->data[i]) // division would go negative
+    if (op2->data[i] > op1->data[i]) // substraction would go negative
     {
       rop->data[i] = (DAI_DEC_UNIT_MAX + op1->data[i]) - op2->data[i];
       carrys[i + 1] = -1;
@@ -385,6 +387,67 @@ DAI_ret_t DAI_sub(DAI_t rop, DAI_t op1, DAI_t op2)
 }
 
 /*
+ * computes rop = op1 - op2
+ */
+DAI_ret_t DAI_smol_int_sub(DAI_t rop, DAI_dec_unit_t op1, DAI_t op2)
+{
+  assert(rop != op2);
+  assert(op1 < DAI_DEC_UNIT_MAX);
+
+  uint8_t multi_dec_unit = 0;
+  for (DAI_prec_t i = 1; i < op2->prec; ++i)
+    if (op2->data[i] != 0)
+    {
+      multi_dec_unit = 1;
+      break;
+    }
+
+  if (!multi_dec_unit)
+  {
+    DAI_set_zero(rop);
+    if (op2->data[0] <= op1) // easy case, rop >= 0, no carry
+    {
+      rop->data[0] = op1 - op2->data[0];
+      return DAI_RET_OK;
+    }
+
+    // op2->data[0] < op1 => rop < 0
+    DAI_SET_FLAG(*rop, DAI_FLAGS_NEGA);
+    // rop = op1 - op2 = -(op2 - op1)
+    // op1 - op2->data[0] < 0 => rop->data[0] = op2->data[0] - op1
+    rop->data[0] = op2->data[0] - op1;
+
+    return DAI_RET_OK;
+  }
+
+  // op2 > op1 => rop < 0
+  // rop = op1 - op2 = -(op2 - op1)
+  DAI_SET_FLAG(*rop, DAI_FLAGS_NEGA);
+
+  if (op2->data[0] >= op1) // easy case, no carry
+  {
+    DAI_set(rop, op2);
+    rop->data[0] = op2->data[0] - op1;
+    return DAI_RET_OK;
+  }
+
+  // will have a carry of -1
+  rop->data[0] = (DAI_DEC_UNIT_MAX + op2->data[0]) - op1;
+  int8_t carry = -1;
+
+  for (DAI_prec_t i = 1; i < op2->prec; ++i)
+  {
+    if (op2->data[i] > 0)
+    {
+      op2->data[i] += carry;
+      return DAI_RET_OK;
+    }
+  }
+
+  return DAI_RET_PREC_ERROR;
+}
+
+/*
  * computes rop = op1 * op2
  * rop->prec MUST be at least 2, as the result of op1 * op2 could be up to 1 + 1 dec unit long
  */
@@ -417,8 +480,11 @@ static DAI_ret_t DAI_mul_dec_unit(DAI_t rop, DAI_dec_unit_t op1, DAI_dec_unit_t 
   return DAI_RET_OK;
 }
 
-DAI_ret_t DAI_mul_smol_int(DAI_t rop, DAI_t op1, uint32_t op2)
+DAI_ret_t DAI_mul_smol_int(DAI_t rop, DAI_t op1, DAI_dec_unit_t op2)
 {
+  assert(rop != op1);
+  assert(op2 < DAI_DEC_UNIT_MAX);
+
   DAI_set_zero(rop);
   DAI_t acc = rop;
   DAI_t acc2;
@@ -530,11 +596,9 @@ DAI_ret_t DAI_srl_dec(DAI_t rop, DAI_t op, DAI_prec_t n)
     return DAI_RET_OK;
   }
 
-  uint32_t lut[10] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
-
   DAI_prec_t broad = n / 9;
   uint8_t fine = n % 9;
-  DAI_dec_unit_t div = lut[fine];
+  DAI_dec_unit_t div = pow_10_lut[fine];
 
   DAI_srl(rop, op, broad);
 
@@ -548,7 +612,7 @@ DAI_ret_t DAI_srl_dec(DAI_t rop, DAI_t op, DAI_prec_t n)
     // printf("%lu ", tmp);
     rop->data[i] /= div;
     // printf("(rop[%3llu]) / %lu = %lu\t", i, div, rop->data[i]);
-    rop->data[i] += prev * lut[10 - fine - 1];
+    rop->data[i] += prev * pow_10_lut[10 - fine - 1];
     // printf("prev : %llu\n", prev);
     prev = tmp % div;
   }
@@ -557,7 +621,7 @@ DAI_ret_t DAI_srl_dec(DAI_t rop, DAI_t op, DAI_prec_t n)
   // printf("%lu  ", tmp);
   rop->data[0] /= div;
   // printf("(rop[%3llu]) / %lu = %lu\t", 0, div, rop->data[0]);
-  rop->data[0] += prev * lut[10 - fine - 1];
+  rop->data[0] += prev * pow_10_lut[10 - fine - 1];
   // printf("prev : %llu\n", prev);
   prev = tmp % div;
 
