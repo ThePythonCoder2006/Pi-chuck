@@ -31,9 +31,6 @@ GMP_FLAGS = -lgmp -D__DAI_USE_GMP__
 GMP_ODIR = $(ODIR)/gmp
 GMP_OBJ = $(OBJ:$(ODIR)/%.o=$(GMP_ODIR)/%.o)
 
-LATEX_AUX_DIR= ./latex_tmp
-LATEX_SOURCE= computation_steps.tex
-
 SPECIAL_FLAGS = -O3
 STD_FLAGS = -Wall -Wextra -pedantic $(IFLAGS)
 CFLAGS = $(STD_FLAGS) $(SPECIAL_FLAGS)
@@ -64,6 +61,3 @@ $(OUT_DIR) $(ODIR) $(CUSTOM_ODIR) $(GMP_ODIR) $(CUSTOM_ODIR)/DAI $(GMP_ODIR)/DAI
 
 $(OUT_DB): $(SRC)
 	$(CC) $^ -o $@ $(STD_FLAGS) -ggdb
-
-latex: $(LATEX_SOURCE) Makefile | $(LATEX_AUX_DIR)
-	pdflatex -aux-directory=$(LATEX_AUX_DIR) $< --interaction=batchmode
