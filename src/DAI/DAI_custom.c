@@ -11,7 +11,7 @@
 
 const uint32_t pow_10_lut[10] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
 
-const DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1] = {
+DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1] = {
     "nothing went wrong",
     "the precision of the int given was not enough to perform the calculations that were asked !",
     "some memory could not be allocated !",
@@ -496,7 +496,7 @@ DAI_ret_t DAI_mul_smol_int(DAI_t rop, DAI_t op1, DAI_dec_unit_t op2)
   for (DAI_prec_t i = 0; i < op1->prec; ++i)
   {
     DAI_mul_dec_unit(digit_res, op1->data[i], op2);
-    DAI_add(acc2, acc, digit_res);
+    DAI_add_shift(acc2, acc, 0, digit_res, i);
 
     // pointer swap
     DAI_t tmp = acc;
@@ -596,8 +596,8 @@ DAI_ret_t DAI_srl_dec(DAI_t rop, DAI_t op, DAI_prec_t n)
     return DAI_RET_OK;
   }
 
-  DAI_prec_t broad = n / 9;
-  uint8_t fine = n % 9;
+  DAI_prec_t broad = n / DAI_DEC_UNIT_NUM_DIGITS;
+  uint8_t fine = n % DAI_DEC_UNIT_NUM_DIGITS;
   DAI_dec_unit_t div = pow_10_lut[fine];
 
   DAI_srl(rop, op, broad);
@@ -624,6 +624,20 @@ DAI_ret_t DAI_srl_dec(DAI_t rop, DAI_t op, DAI_prec_t n)
   rop->data[0] += prev * pow_10_lut[10 - fine - 1];
   // printf("prev : %llu\n", prev);
   prev = tmp % div;
+
+  return DAI_RET_OK;
+}
+
+DAI_ret_t DAI_10_pow_n(DAI_t rop, uint64_t n)
+{
+  DAI_prec_t broad = n / DAI_DEC_UNIT_NUM_DIGITS;
+  DAI_prec_t fine = n % DAI_DEC_UNIT_NUM_DIGITS;
+
+  DAI_set_zero(rop);
+  rop->data[broad] = pow_10_lut[fine];
+
+  DAI_CLEAR_FLAG(*rop, DAI_FLAGS_ZERO);
+  DAI_CLEAR_FLAG(*rop, DAI_FLAGS_NEGA);
 
   return DAI_RET_OK;
 }

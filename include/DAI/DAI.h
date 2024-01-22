@@ -53,6 +53,8 @@ DAI_ret_t DAI_mul_smol_int(DAI_t rop, DAI_t op1, DAI_dec_unit_t op2);
 DAI_ret_t DAI_srl(DAI_t rop, DAI_t op, DAI_prec_t n);
 DAI_ret_t DAI_srl_dec(DAI_t rop, DAI_t op, DAI_prec_t n);
 
+DAI_ret_t DAI_10_pow_n(DAI_t rop, uint64_t n);
+
 // ------------- other functions ----------------------
 
 // comparaison functions

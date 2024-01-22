@@ -8,6 +8,7 @@
 
 typedef uint32_t DAI_dec_unit_t;
 #define DAI_DEC_UNIT_MAX BILLION
+#define DAI_DEC_UNIT_NUM_DIGITS (9)
 
 typedef uint64_t DAI_prec_t;
 #define DAI_PREC_MAX (UINT64_MAX)
@@ -35,7 +36,7 @@ typedef enum DAI_ret_e
 
 #define DAI_ERRORMSG_SIZE (256)
 typedef char DAI_errormsg[DAI_ERRORMSG_SIZE];
-extern const DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1];
+extern DAI_errormsg DAI_errormsgs[DAI_RET_TOT + 1];
 
 /*
  * fn is a function call whose return value will be checked
